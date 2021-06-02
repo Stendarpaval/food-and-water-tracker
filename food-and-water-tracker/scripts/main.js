@@ -125,7 +125,7 @@ async function openFoodDialog(consumerActor) {
 			one: {
 				label: "1 lb or more",
 				callback: () => {
-					console.log(MODULE + " | Resetting `DaysWithoutFood` variable to 0.")
+					console.log(MODULE + " | Resetting `DaysWithoutFood` variable to 0")
 					consumerActor.setFlag("dnd5e","DaysWithoutFood",0);
 					openWaterDialog(consumerActor);
 				}
