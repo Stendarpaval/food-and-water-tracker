@@ -6,8 +6,8 @@
 	"version": "1.0.0",
 	"minimumCoreVersion": "0.7.6",
 	"compatibleCoreVersion": "0.7.9",
-	"system": "dnd5e",
+	"system": ["dnd5e"],
 	"esmodules": [
-			"scripts/main.js"
+			"./scripts/main.js"
 		]
 }

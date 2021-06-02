@@ -73,15 +73,6 @@ Hooks.on("init", () => {
 		type: Boolean
 	});
 
-	// game.settings.register(MODULE,"dialogActive", {
-	// 	name: "Dialog Active Variable",
-	// 	hint: "Do not touch",
-	// 	config: false,
-	// 	scope: "world",
-	// 	default: false,
-	// 	type: Boolean
-	// });
-
 });
 
 
@@ -126,11 +117,7 @@ async function openFoodDialog(consumerActor) {
 	let maxFoodDays = ((consumerActor.data.flags.dnd5e.customFoodLimit == 0) ? 3 + conMod : consumerActor.data.flags.dnd5e.customFoodLimit);
 	let noFoodDays = consumerActor.getFlag("dnd5e","DaysWithoutFood");
 
-	// let newDay = true;
-	// console.log("Made it to 1/2");
-	// newDay = await LongRestDialogFoodWater.longRestDialog({actor: consumerActor});
- //    console.log("Made it to 2/2");
- //    let active = game.settings.set(MODULE,"dialogActive",false);
+
 	new Dialog({
 		title: "Food Tracker",
 		content: '<form id="food-tracker" class="dialog-content" onsubmit="event.preventDefault();"><p>Days without food: ' + noFoodDays + '/' + maxFoodDays + ' days</p><div class="form-group"><p class="hint">You need to eat at least 1 lb of food per day, though you can stretch your rations by eating 0.5 lb of food per day. At the end of each day after your limit of ' + Math.max(maxFoodDays,1) + ' days, you automatically gain 1 point of exhaustion. A normal day of eating resets the count of days without food to zero.</p></div><p>How much food did you eat today?</p></form>',
@@ -165,7 +152,8 @@ async function openFoodDialog(consumerActor) {
 					openWaterDialog(consumerActor);
 				}
 			}
-		}
+		},
+		default: "one"
 	}).render(true);
 }
 
@@ -177,7 +165,7 @@ async function openWaterDialog(consumerActor) {
 
 	new Dialog({
 		title: "Water Tracker",
-		content: '<form id="water-tracker" class="dialog-content" onsubmit="event.preventDefault();"><div class="form-group"><p class="hint">You need 1 gallon of water per day, or 2 gallons if the weather is hot. If you only drink half that much water, you must succeed on a DC '+game.settings.get(MODULE,"thirstSaveDC")+' Constitution saving throw or suffer one level of exhaustion at the end of the day. If you drink even less water, you automatically gain 1 level of exhaustion at the end of the day.</p><p class="hint">If you already have one or more levels of exhaustion, you take two levels in either case.</p></div><p>How much water did you drink today?</p></form>',
+		content: '<form id="water-tracker" class="dialog-content"><div class="form-group"><p class="hint">You need 1 gallon of water per day, or 2 gallons if the weather is hot. If you only drink half that much water, you must succeed on a DC '+game.settings.get(MODULE,"thirstSaveDC")+' Constitution saving throw or suffer one level of exhaustion at the end of the day. If you drink even less water, you automatically gain 1 level of exhaustion at the end of the day.</p><p class="hint">If you already have one or more levels of exhaustion, you take two levels in either case.</p></div><p>How much water did you drink today?</p></form>',
 		buttons: {
 			one: {
 				label: reqWater + " gallons or more",
@@ -217,7 +205,8 @@ async function openWaterDialog(consumerActor) {
 					}
 				}
 			}
-		}
+		},
+		default: "one"
 	}).render(true);
 }
 
