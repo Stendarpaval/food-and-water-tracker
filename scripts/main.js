@@ -43,22 +43,22 @@ Hooks.on("init", () => {
 	}
 
 	game.settings.register(MODULE,"relevantRestTypes", {
-		name: "Relevant Rest Types",
-		hint: "Choose during which types of resting players will be prompted about food and water consumption.",
+		name: "SETTINGS.FW.relevantRestTypes",
+		hint: "SETTINGS.FW.relevantRestTypesHint",
 		config: true,
 		scope: "world",
 		default: 1,
 		type: Number,
 		choices: {
-			0: "Short Rests",
-			1: "Long Rests",
-			2: "Short Rests and Long Rests"
+			0: "FW.shortRests",
+			1: "FW.longRests",
+			2: "FW.shortAndLongRests"
 		}
 	});
 
 	game.settings.register(MODULE,"thirstSaveDC", {
-		name: "Thirst Save DC",
-		hint: "Change the DC (15 by default) for the Constitution saving throw made to resist gaining exhaustion from thirst.",
+		name: "SETTINGS.FW.thirstSaveDC",
+		hint: "SETTINGS.FW.thirstSaveDCHint",
 		config: true,
 		scope: "world",
 		default: 15,
@@ -66,8 +66,8 @@ Hooks.on("init", () => {
 	});
 
 	game.settings.register(MODULE,"hotWeather", {
-		name: "Hot Weather",
-		hint: "If the weather is hot, then each character needs 2 gallons of water per day.",
+		name: "SETTINGS.FW.hotWeather",
+		hint: "SETTINGS.FW.hotWeatherHint",
 		config: true,
 		scope: "world",
 		type: Boolean
@@ -76,26 +76,61 @@ Hooks.on("init", () => {
 });
 
 
-Hooks.on("renderApplication", (args) => {
+Hooks.on("renderShortRestDialog", async (args, html) => {
 	if (typeof args.actor === "undefined") return;
 	if (typeof args.actor.data.flags.dnd5e === "undefined") return;
 	if (!args.actor.data.flags.dnd5e.trackFoodAndwater) return;
+	if (game.settings.get(MODULE,"relevantRestTypes") === 1) return;
 
-	let restTypeConfig = game.settings.get(MODULE,"relevantRestTypes");
-	let restType = false;
-	if (restTypeConfig == 0) {
-		restType = (args.title == "Short Rest");
-	} else if (restTypeConfig == 1) {
-		restType = (args.title == "Long Rest");
-	} else if (restTypeConfig == 2) {
-		restType = (args.title == "Short Rest" || args.title == "Long Rest");
-	}
-	if (restType) {
-		(async () => {
-			await openFoodDialog(args.actor);
-		})();
-	}
+	const data = await getFWData(args.actor);
+	const foodWaterOptions = await renderTemplate('modules/food-and-water-tracker/templates/track-food-water.html', data);
+	html.css({height: 'auto'}).find('div[class="dialog-buttons"]').before(foodWaterOptions);
 });
+
+
+Hooks.on("renderLongRestDialog", async (args, html) => {
+	if (typeof args.actor === "undefined") return;
+	if (typeof args.actor.data.flags.dnd5e === "undefined") return;
+	if (!args.actor.data.flags.dnd5e.trackFoodAndwater) return;
+	if (game.settings.get(MODULE,"relevantRestTypes") === 0) return;
+
+	const data = await getFWData(args.actor);
+	let foodWaterOptions = await renderTemplate('modules/food-and-water-tracker/templates/track-food-water.html', data);
+	console.log(foodWaterOptions);
+	html.css({height: 'auto'}).find('div[class="dialog-buttons"]').before(foodWaterOptions);
+	// await openFoodDialog(args.actor);
+});
+
+async function getFWData(consumerActor) {
+	let defaultFlagValues = {
+		"DaysWithoutFood": 0,
+		"customFoodLimit": 0,
+		"DaysWithoutWater": 0,
+		"customWaterLimit": 0
+	};
+
+	for ( let [key, value] of Object.entries(defaultFlagValues) ) {
+		if (typeof consumerActor.data.flags.dnd5e[key] === "undefined") {
+			console.log(MODULE + " | Setting default food and water flag values.");
+			await consumerActor.setFlag("dnd5e", key, value);
+		}
+	}
+
+	let conMod = Math.floor((consumerActor.data.data.abilities.con.value - 10) / 2);
+	let maxFoodDays = ((consumerActor.data.flags.dnd5e.customFoodLimit === 0) ? 3 + conMod : consumerActor.data.flags.dnd5e.customFoodLimit);
+	let noFoodDays = consumerActor.getFlag("dnd5e","DaysWithoutFood");
+
+	let maxWaterDays = ((consumerActor.data.flags.dnd5e.customWaterLimit == 0) ? 1 : consumerActor.data.flags.dnd5e.customWaterLimit);
+	let noWaterDays = consumerActor.getFlag("dnd5e","DaysWithoutWater");
+	let reqWater = (game.settings.get(MODULE,"hotWeather") ? 2 : 1);
+
+	const data = {
+		noFoodDays,
+		maxFoodDays,
+		reqWater
+	};
+	return data;
+}
 
 
 async function openFoodDialog(consumerActor) {
