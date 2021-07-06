@@ -2,7 +2,7 @@
  A Foundry VTT module that makes it easier to track food and water.
 
 ## How to install
-You can install Food and Water Tracker by pasting the following manifest link into Foundry's package browser: `https://github.com/Stendarpaval/food-and-water-tracker/main/module.json`.
+You can install Food and Water Tracker by pasting the following manifest link into Foundry's package browser: `https://raw.githubusercontent.com/Stendarpaval/food-and-water-tracker/main/module.json`.
 
 ## How to use
 After installing this module, you need to go to an actor's <strong>Special Traits</strong> menu. This menu is found on the Attributes tab of actor sheets. Inside the "Special Traits" menu, scroll down to find the "Food and Water" section added by this module. Check the "Track Food and Water" checkbox to start tracking food and water for that actor. The other options here allow you to manually configure relevant tracking variables.
