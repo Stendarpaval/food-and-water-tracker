@@ -1,19 +1,17 @@
-<hr>
 <div class="form-group">
-	<label for="foodQuantity">{{localize 'FWT.foodQuantityQuestion'}}</label>
-	<select name="foodQuantity">
+	<label for="foodQuantity" style="flex-grow: 3;">{{localize 'FWT.foodQuantityQuestion'}}</label>
+	<select class="foodQuantity" name="foodQuantity" style="flex-grow: 2;">
 		<option value="onePoundOrMore">{{localize 'FWT.onePoundOrMoreFood'}}</option>
 		<option value="halfPound">{{localize 'FWT.halfPoundFood'}}</option>
 		<option value="none">{{localize 'FWT.noneFood'}}</option>
 	</select>
-	<p class="notes">{{localize 'FWT.daysWithoutFood'}}: {{noFoodDays}}/{{maxFoodDays}} {{localize 'days'}}.</p>
+	<p class="notes">{{localize 'FWT.daysWithoutFood'}}: {{noFoodDays}}/{{maxFoodDays}} {{localize 'days'}}. {{localize 'FWT.foodExplanation'}}</p>
 
-	<label for="waterQuantity">{{localize 'FWT.waterQuantityQuestion'}}</label>
-	<select name="waterQuantity">
-		<option value="moreThanRequiredWater">{{reqWater}} {{localize 'FWT.gallonsOrMoreWater'}}</option>
-		<option value="requiredWater">{{reqWater}} {{localize 'FWT.gallonsWater'}}</option>
-		<option value="lessThanRequiredWater">{{localize 'FWT.lessThanWater'}} {{reqWater}} {{localize 'FWT.gallonsWater'}}</option>
+	<label for="waterQuantity" style="flex-grow: 3;">{{localize 'FWT.waterQuantityQuestion'}}</label>
+	<select class="waterQuantity" name="waterQuantity" style="flex-grow: 2;">
+		<option value="moreThanRequiredWater">{{localize 'FWT.moreThanWater'}} {{reqWater}} {{localize 'FWT.gallonWater'}}{{#if pluralGallons}}{{localize 'FWT.gallonsWater'}}{{/if}}</option>
+		<option value="requiredWater">{{reqWater}} {{localize 'FWT.gallonWater'}}{{#if pluralGallons}}{{localize 'FWT.gallonsWater'}}{{/if}}</option>
+		<option value="lessThanRequiredWater">{{localize 'FWT.lessThanWater'}} {{reqWater}} {{localize 'FWT.gallonWater'}}{{#if pluralGallons}}{{localize 'FWT.gallonsWater'}}{{/if}}</option>
 	</select>
-	<!-- <p class="notes"></p> -->
+	<p class="notes">{{#if showMaxWaterDays}}{{localize 'FWT.daysWithoutWater'}}: {{noWaterDays}}/{{maxWaterDays}} {{localize 'days'}}. {{/if}}{{localize 'FWT.waterExplanation'}}</p>
 </div>
-<br>
