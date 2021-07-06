@@ -11,4 +11,4 @@ Whenever characters that have food and water tracking enabled take a short or lo
 
 <img width="405" alt="Screenshot FWT 1.1.0" src="https://user-images.githubusercontent.com/17188192/124661061-4dbbf380-dea7-11eb-8af2-3a495376b045.png">
 
-The DC of the Constitution saving throw is configurable in the module's settings, where you will also find a toggle for hot weather. As the text in the screenshot above says, this module will increase a character's exhaustion level when appropriate. 
+The DC of the Constitution saving throw is configurable in the module's settings, where you will also find a toggle for hot weather. As the text in the screenshot above says, this module will increase a character's exhaustion level when appropriate based on the Food and Water rules found in the SRD verson 5.1, page 86 and 87.
