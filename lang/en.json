@@ -37,5 +37,13 @@
 	"SETTINGS.FWT.hotWeather": "Hot Weather",
 	"SETTINGS.FWT.hotWeatherHint": "If the weather is hot, then each character needs 2 gallons of water per day.",
 	"SETTINGS.FWT.showMaxWaterDays": "Show custom maximum days without water",
-	"SETTINGS.FWT.showMaxWaterDaysHint": "Enable this optional setting to display how many days a character has gone without water, as well as the (custom) maximum days they can go without water."
+	"SETTINGS.FWT.showMaxWaterDaysHint": "Enable this optional setting to display how many days a character has gone without water, as well as the (custom) maximum days they can go without water.",
+	"SETTINGS.FWT.useCustomFWRules": "Use custom Food and Water rules",
+	"SETTINGS.FWT.useCustomFWRulesHint": "Enable this to display custom Food and Water rules and to disable the exhaustion automation.",
+	"SETTINGS.FWT.customFoodRuleText": "Custom Food rule text",
+	"SETTINGS.FWT.customFoodRuleTextHint": "If the \"Use custom Food and Water rules\" setting is enabled, then this text will be displayed as the Food rule hint in the rest dialog.",
+	"SETTINGS.FWT.customWaterRuleText": "Custom Water rule text",
+	"SETTINGS.FWT.customWaterRuleTextHint": "If the \"Use custom Food and Water rules\" setting is enabled, then this text will be displayed as the Water rule hint in the rest dialog.",
+	"SETTINGS.FWT.listConsumableFood": "List consumable food items",
+	"SETTINGS.FWT.listConsumableFoodHint": "If enabled, the drop down list of food options will be replaced with the food items in the actor's inventory. One quantity of that item will be consumed upon confirming the rest dialog."
 }

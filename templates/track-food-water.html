@@ -1,11 +1,21 @@
 <div class="form-group">
 	<label for="foodQuantity" style="flex-grow: 3;">{{localize 'FWT.foodQuantityQuestion'}}</label>
+	{{#if showDefaultFoodOptions}}
 	<select class="foodQuantity" name="foodQuantity" style="flex-grow: 2;">
 		<option value="onePoundOrMore">{{localize 'FWT.onePoundOrMoreFood'}}</option>
 		<option value="halfPound">{{localize 'FWT.halfPoundFood'}}</option>
 		<option value="none">{{localize 'FWT.noneFood'}}</option>
 	</select>
-	<p class="notes">{{localize 'FWT.daysWithoutFood'}}: {{noFoodDays}}/{{maxFoodDays}} {{localize 'days'}}. {{localize 'FWT.foodExplanation'}}</p>
+	{{/if}}
+	{{#if listFoodItemOptions}}
+	<select class="foodQuantity" name="foodQuantity" style="flex-grow: 2;">
+		{{#each foodList}}
+			<option value={{this.id}}>{{this.name}}</option>
+		{{/each}}
+		<option value="none">{{localize 'FWT.noneFood'}}</option>
+	</select>
+	{{/if}}
+	<p class="notes">{{localize 'FWT.daysWithoutFood'}}: {{noFoodDays}}/{{maxFoodDays}} {{localize 'days'}}. {{#if showSRDrules}}{{localize 'FWT.foodExplanation'}}{{/if}}{{#if showCustomRules}}{{customFoodRuleText}}{{/if}}</p>
 
 	<label for="waterQuantity" style="flex-grow: 3;">{{localize 'FWT.waterQuantityQuestion'}}</label>
 	<select class="waterQuantity" name="waterQuantity" style="flex-grow: 2;">
@@ -13,5 +23,5 @@
 		<option value="requiredWater">{{reqWater}} {{localize 'FWT.gallonWater'}}{{#if pluralGallons}}{{localize 'FWT.gallonsWater'}}{{/if}}</option>
 		<option value="lessThanRequiredWater">{{localize 'FWT.lessThanWater'}} {{reqWater}} {{localize 'FWT.gallonWater'}}{{#if pluralGallons}}{{localize 'FWT.gallonsWater'}}{{/if}}</option>
 	</select>
-	<p class="notes">{{#if showMaxWaterDays}}{{localize 'FWT.daysWithoutWater'}}: {{noWaterDays}}/{{maxWaterDays}} {{localize 'days'}}. {{/if}}{{localize 'FWT.waterExplanation'}}</p>
+	<p class="notes">{{#if showMaxWaterDays}}{{localize 'FWT.daysWithoutWater'}}: {{noWaterDays}}/{{maxWaterDays}} {{localize 'days'}}. {{/if}}{{#if showSRDrules}}{{localize 'FWT.waterExplanation'}}{{/if}}{{#if showCustomRules}}{{customWaterRuleText}}{{/if}}</p>
 </div>

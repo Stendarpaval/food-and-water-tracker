@@ -82,6 +82,42 @@ Hooks.on("init", () => {
 		scope: "world",
 		type: Boolean
 	});
+
+	game.settings.register(MODULE,"useCustomFWRules", {
+		name: "SETTINGS.FWT.useCustomFWRules",
+		hint: "SETTINGS.FWT.useCustomFWRulesHint",
+		config: true,
+		default: false,
+		scope: "world",
+		type: Boolean
+	});
+
+	game.settings.register(MODULE,"customFoodRuleText", {
+		name: "SETTINGS.FWT.customFoodRuleText",
+		hint: "SETTINGS.FWT.customFoodRuleTextHint",
+		config: true,
+		default: "You need to eat at least 1 lb of food each day.",
+		scope: "world",
+		type: String
+	});
+
+	game.settings.register(MODULE,"customWaterRuleText", {
+		name: "SETTINGS.FWT.customWaterRuleText",
+		hint: "SETTINGS.FWT.customWaterRuleTextHint",
+		config: true,
+		default: "You need to drink at least 1 gallon of water each day.",
+		scope: "world",
+		type: String
+	});
+
+	game.settings.register(MODULE,"listConsumableFood", {
+		name: "SETTINGS.FWT.listConsumableFood",
+		hint: "SETTINGS.FWT.listConsumableFoodHint",
+		config: true,
+		default: false,
+		scope: "world",
+		type: Boolean
+	});
 });
 
 
@@ -136,19 +172,46 @@ Hooks.on("closeLongRestDialog", async (args, html) => {
 // process the food and water tracking input
 async function trackFoodAndWater(args, html) {
 	const data = await getFWData(args.actor);
+	const listFoodItemOptions = game.settings.get(MODULE, "listConsumableFood");
 
-	let foodQuantity = html.find('.foodQuantity')[0].value;
+	let foodQuantity = "";
+	if (listFoodItemOptions) {
+		let foodId = html.find('.foodQuantity')[0].value;
+		if (foodId === "none") {
+			foodQuantity = "none";
+		} else {
+			if (args.actor.items.get(foodId)) {
+				let foodItem = args.actor.items.get(foodId);
+				if (foodItem.data.data?.weight > 1) {
+					foodQuantity = "onePoundOrMore";
+				} else if (foodItem.data.data?.weight > 0.5 && foodItem.data.data?.weight < 1) {
+					foodQuantity = "halfPound";
+				} else {
+					foodQuantity = "none";
+				}
+				if (foodItem.data.data?.quantity > 1) {
+					await foodItem.update({"data.quantity": foodItem.data.data?.quantity - 1})
+				} else if (foodItem.data.data?.quantity === 1) {
+					await foodItem.delete();
+				}
+			}	
+		}
+	} else {
+		foodQuantity = html.find('.foodQuantity')[0].value;
+	}
 	if (foodQuantity === "onePoundOrMore") {
 		console.log(MODULE + " | Resetting `DaysWithoutFood` variable to 0.")
 		await args.actor.setFlag("dnd5e", "DaysWithoutFood", 0);
 	} else if (foodQuantity === "halfPound") {
 		await args.actor.setFlag("dnd5e", "DaysWithoutFood", data.noFoodDays + 0.5);
+		if (game.settings.get(MODULE,"useCustomFWRules")) return;
 		if (data.noFoodDays + 0.5 >= data.maxFoodDays + 1) {
 			ui.notifications.info(game.i18n.format("FWT.exhaustionNotifyHunger", {actorName: args.actor.name}));
 			await args.actor.update({"data.attributes.exhaustion": args.actor.data.data.attributes.exhaustion + 1});
 		}
 	} else {
 		await args.actor.setFlag("dnd5e", "DaysWithoutFood", data.noFoodDays + 1);
+		if (game.settings.get(MODULE,"useCustomFWRules")) return;
 		if (data.noFoodDays + 1 > data.maxFoodDays) {
 			ui.notifications.info(game.i18n.format("FWT.exhaustionNotifyHunger", {actorName: args.actor.name}));
 			await args.actor.update({"data.attributes.exhaustion": args.actor.data.data.attributes.exhaustion + 1});
@@ -160,12 +223,13 @@ async function trackFoodAndWater(args, html) {
 		await args.actor.setFlag("dnd5e", "DaysWithoutWater", 0);
 	} else if (waterQuantity === "requiredWater") {
 		await args.actor.setFlag("dnd5e", "DaysWithoutWater", data.noWaterDays + 0.5);
+		if (game.settings.get(MODULE,"useCustomFWRules")) return;
 		if (args.actor.data.data.attributes.exhaustion !== 0) {
 			ui.notifications.info(game.i18n.format("FWT.exhaustionNotifyDehydration", {actorName: args.actor.name}));
 			await args.actor.update({"data.attributes.exhaustion": args.actor.data.data.attributes.exhaustion + 2});
 		} else {
-			let conSave = await new Promise(async (resolve) => {
-				const conSaveResult = await args.actor.rollAbilitySave("con",{flavor: game.i18n.format("FWT.conSaveFlavor", {thirstSaveDC: game.settings.get(MODULE,"thirstSaveDC")})});
+			let conSave = await new Promise((resolve) => {
+				const conSaveResult = args.actor.rollAbilitySave("con",{flavor: game.i18n.format("FWT.conSaveFlavor", {thirstSaveDC: game.settings.get(MODULE,"thirstSaveDC")})});
 				resolve(conSaveResult);
 			})
 			
@@ -176,6 +240,7 @@ async function trackFoodAndWater(args, html) {
 		}
 	} else {
 		await args.actor.setFlag("dnd5e","DaysWithoutWater",data.noWaterDays + 1);
+		if (game.settings.get(MODULE,"useCustomFWRules")) return;
 		if (args.actor.data.data.attributes.exhaustion !== 0) {
 			ui.notifications.info(game.i18n.format("FWT.exhaustionNotifyDehydration", {actorName: args.actor.name}));
 			await args.actor.update({"data.attributes.exhaustion": args.actor.data.data.attributes.exhaustion + 2});
@@ -189,7 +254,7 @@ async function trackFoodAndWater(args, html) {
 
 // collect food and water tracking data from an actor
 async function getFWData(consumerActor) {
-	let defaultFlagValues = {
+	const defaultFlagValues = {
 		"DaysWithoutFood": 0,
 		"customFoodLimit": 0,
 		"DaysWithoutWater": 0,
@@ -203,16 +268,34 @@ async function getFWData(consumerActor) {
 		}
 	}
 
-	let conMod = Math.floor((consumerActor.data.data.abilities.con.value - 10) / 2);
-	let maxFoodDays = ((consumerActor.data.flags.dnd5e.customFoodLimit === 0) ? 3 + conMod : consumerActor.data.flags.dnd5e.customFoodLimit);
-	let noFoodDays = consumerActor.getFlag("dnd5e","DaysWithoutFood");
+	const conMod = Math.floor((consumerActor.data.data.abilities.con.value - 10) / 2);
+	const maxFoodDays = ((consumerActor.data.flags.dnd5e.customFoodLimit === 0) ? 3 + conMod : consumerActor.data.flags.dnd5e.customFoodLimit);
+	const noFoodDays = consumerActor.getFlag("dnd5e","DaysWithoutFood");
 
-	let maxWaterDays = ((consumerActor.data.flags.dnd5e.customWaterLimit == 0) ? 1 : consumerActor.data.flags.dnd5e.customWaterLimit);
-	let noWaterDays = consumerActor.getFlag("dnd5e","DaysWithoutWater");
-	let reqWater = (game.settings.get(MODULE,"hotWeather") ? 2 : 1);
-	let pluralGallons = reqWater > 1;
+	const maxWaterDays = ((consumerActor.data.flags.dnd5e.customWaterLimit == 0) ? 1 : consumerActor.data.flags.dnd5e.customWaterLimit);
+	const noWaterDays = consumerActor.getFlag("dnd5e","DaysWithoutWater");
+	const reqWater = (game.settings.get(MODULE,"hotWeather") ? 2 : 1);
+	const pluralGallons = reqWater > 1;
 
-	let showMaxWaterDays = game.settings.get(MODULE,"showMaxWaterDays");
+	const showMaxWaterDays = game.settings.get(MODULE,"showMaxWaterDays");
+
+	let showSRDrules = true, showCustomRules = false;
+	if (game.settings.get(MODULE,"useCustomFWRules")) {
+		showSRDrules = false, showCustomRules = true;
+	}
+	const customFoodRuleText = game.settings.get(MODULE, "customFoodRuleText");
+	const customWaterRuleText = game.settings.get(MODULE, "customWaterRuleText");
+
+	const listFoodItemOptions = game.settings.get(MODULE, "listConsumableFood");
+	let foodList = [];
+	if (listFoodItemOptions) {
+		let foodItems = consumerActor.items.filter(i => i.data.data?.consumableType === "food");
+		for (let food of foodItems) {
+			for (let i = 0; i < food.data.data?.quantity; i++) {
+				foodList.push({name: `${food.name} (${food.data.data?.weight} lbs)`, id: food.id, weight: food.data.data?.weight ?? 0});	
+			}
+		}
+	}
 
 	const data = {
 		noFoodDays,
@@ -221,7 +304,14 @@ async function getFWData(consumerActor) {
 		noWaterDays,
 		maxWaterDays,
 		showMaxWaterDays,
-		pluralGallons
+		pluralGallons,
+		showSRDrules,
+		showCustomRules,
+		customFoodRuleText,
+		customWaterRuleText,
+		showDefaultFoodOptions: !listFoodItemOptions,
+		listFoodItemOptions,
+		foodList
 	};
 	return data;
 }
