@@ -182,7 +182,7 @@ async function trackFoodAndWater(args, html) {
 		} else {
 			if (args.actor.items.get(foodId)) {
 				let foodItem = args.actor.items.get(foodId);
-				if (foodItem.data.data?.weight > 1) {
+				if (foodItem.data.data?.weight >= 1) {
 					foodQuantity = "onePoundOrMore";
 				} else if (foodItem.data.data?.weight > 0.5 && foodItem.data.data?.weight < 1) {
 					foodQuantity = "halfPound";
