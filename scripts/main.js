@@ -184,14 +184,14 @@ async function trackFoodAndWater(args, html) {
 				let foodItem = args.actor.items.get(foodId);
 				if (foodItem.data.data?.weight >= 1) {
 					foodQuantity = "onePoundOrMore";
-				} else if (foodItem.data.data?.weight > 0.5 && foodItem.data.data?.weight < 1) {
+				} else if (foodItem.data.data?.weight >= 0.5 && foodItem.data.data?.weight < 1) {
 					foodQuantity = "halfPound";
 				} else {
 					foodQuantity = "none";
 				}
 				if (foodItem.data.data?.quantity > 1) {
 					await foodItem.update({"data.quantity": foodItem.data.data?.quantity - 1})
-				} else if (foodItem.data.data?.quantity === 1) {
+				} else if (foodItem.data.data?.quantity <= 1) {
 					await foodItem.delete();
 				}
 			}	
@@ -291,9 +291,7 @@ async function getFWData(consumerActor) {
 	if (listFoodItemOptions) {
 		let foodItems = consumerActor.items.filter(i => i.data.data?.consumableType === "food");
 		for (let food of foodItems) {
-			for (let i = 0; i < food.data.data?.quantity; i++) {
-				foodList.push({name: `${food.name} (${food.data.data?.weight} lbs)`, id: food.id, weight: food.data.data?.weight ?? 0});	
-			}
+			foodList.push({name: `${food.name} (${food.data.data?.quantity}) (${food.data.data?.weight} lbs${(food.data.data?.quantity > 1) ? ` each` : ``})`, id: food.id, weight: food.data.data?.weight ?? 0});
 		}
 	}
 
