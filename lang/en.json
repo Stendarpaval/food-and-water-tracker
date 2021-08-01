@@ -18,6 +18,7 @@
 	"FWT.noneFood": "None",
 	"FWT.waterQuantityQuestion": "How much water did you drink?",
 	"FWT.moreThanWater": "More than",
+	"FWT.atLeastWater": "At least",
 	"FWT.gallonWater": "gallon",
 	"FWT.gallonsWater": "s",
 	"FWT.lessThanWater": "Less than",
@@ -45,5 +46,9 @@
 	"SETTINGS.FWT.customWaterRuleText": "Custom Water rule text",
 	"SETTINGS.FWT.customWaterRuleTextHint": "If the \"Use custom Food and Water rules\" setting is enabled, then this text will be displayed as the Water rule hint in the rest dialog.",
 	"SETTINGS.FWT.listConsumableFood": "List consumable food items",
-	"SETTINGS.FWT.listConsumableFoodHint": "If enabled, the drop down list of food options will be replaced with the food items in the actor's inventory. One quantity of that item will be consumed upon confirming the rest dialog."
+	"SETTINGS.FWT.listConsumableFoodHint": "If enabled, the drop down list of food options will be replaced with the food items in the actor's inventory. One quantity of that item will be consumed upon confirming the rest dialog.",
+	"SETTINGS.FWT.listWaterContainers": "List water containers",
+	"SETTINGS.FWT.listWaterContainersHint": "If enabled, the drop down list of water options will be replaced with the water containers in the actor's inventory. The listed charges of the selected item will be consumed upon confirming the rest dialog.",
+	"SETTINGS.FWT.waterContainerCapacities": "Water container capacities",
+	"SETTINGS.FWT.waterContainerCapacitiesHint": "Use this text field to specify how many charges of a water container item correspond to 1 gallon. An example of the correct format is 'Waterskin:8;Flask:8'. As shown, each entry is separated with a semicolon, and a colon is used between the item name and the number of charges that correspond to 1 gallon. A waterskin has 4 charges, but it only contains 0.5 gallons of water. A flask doesn't even have charges by default, but it holds 1 pint, which is 1/8th of a gallon. You will need to give the flask at least a single charge to make it show up in the list."
 }

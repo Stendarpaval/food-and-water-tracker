@@ -18,10 +18,20 @@
 	<p class="notes">{{localize 'FWT.daysWithoutFood'}}: {{noFoodDays}}/{{maxFoodDays}} {{localize 'days'}}. {{#if showSRDrules}}{{localize 'FWT.foodExplanation'}}{{/if}}{{#if showCustomRules}}{{customFoodRuleText}}{{/if}}</p>
 
 	<label for="waterQuantity" style="flex-grow: 3;">{{localize 'FWT.waterQuantityQuestion'}}</label>
+	{{#if showDefaultWaterOptions}}
 	<select class="waterQuantity" name="waterQuantity" style="flex-grow: 2;">
 		<option value="moreThanRequiredWater">{{localize 'FWT.moreThanWater'}} {{reqWater}} {{localize 'FWT.gallonWater'}}{{#if pluralGallons}}{{localize 'FWT.gallonsWater'}}{{/if}}</option>
-		<option value="requiredWater">{{reqWater}} {{localize 'FWT.gallonWater'}}{{#if pluralGallons}}{{localize 'FWT.gallonsWater'}}{{/if}}</option>
-		<option value="lessThanRequiredWater">{{localize 'FWT.lessThanWater'}} {{reqWater}} {{localize 'FWT.gallonWater'}}{{#if pluralGallons}}{{localize 'FWT.gallonsWater'}}{{/if}}</option>
+		<option value="requiredWater">{{localize 'FWT.atLeastWater'}} {{halfReqWater}} {{localize 'FWT.gallonWater'}}{{#if halfPluralGallons}}{{localize 'FWT.gallonsWater'}}{{/if}}</option>
+		<option value="lessThanRequiredWater">{{localize 'FWT.lessThanWater'}} {{halfReqWater}} {{localize 'FWT.gallonWater'}}{{#if halfPluralGallons}}{{localize 'FWT.gallonsWater'}}{{/if}}</option>
 	</select>
+	{{/if}}
+	{{#if listWaterContainers}}
+	<select class="waterQuantity" name="waterQuantity" style="flex-grow: 2;">
+		{{#each waterList}}
+			<option value={{this.id}}>{{this.name}}</option>
+		{{/each}}
+		<option value="lessThanRequiredWater">{{localize 'FWT.lessThanWater'}} {{halfReqWater}} {{localize 'FWT.gallonWater'}}{{#if halfPluralGallons}}{{localize 'FWT.gallonsWater'}}{{/if}}</option>
+	</select>
+	{{/if}}
 	<p class="notes">{{#if showMaxWaterDays}}{{localize 'FWT.daysWithoutWater'}}: {{noWaterDays}}/{{maxWaterDays}} {{localize 'days'}}. {{/if}}{{#if showSRDrules}}{{localize 'FWT.waterExplanation'}}{{/if}}{{#if showCustomRules}}{{customWaterRuleText}}{{/if}}</p>
 </div>

@@ -118,6 +118,24 @@ Hooks.on("init", () => {
 		scope: "world",
 		type: Boolean
 	});
+
+	game.settings.register(MODULE,"listWaterContainers", {
+		name: "SETTINGS.FWT.listWaterContainers",
+		hint: "SETTINGS.FWT.listWaterContainersHint",
+		config: true,
+		default: false,
+		scope: "world",
+		type: Boolean
+	});
+
+	game.settings.register(MODULE,"waterContainerCapacities", {
+		name: "SETTINGS.FWT.waterContainerCapacities",
+		hint: "SETTINGS.FWT.waterContainerCapacitiesHint",
+		config: true,
+		default: "Waterskin:8",
+		scope: "world",
+		type: String
+	});
 });
 
 
@@ -140,7 +158,6 @@ Hooks.on("renderShortRestDialog", async (args, html) => {
 	html.css({height: 'auto'}).find('div[class="dialog-buttons"]').before(foodWaterOptions);
 });
 
-
 Hooks.on("renderLongRestDialog", async (args, html) => {
 	if (!isTrackingEnabled(args)) return;
 	if (game.settings.get(MODULE,"relevantRestTypes") === 0) return;
@@ -150,7 +167,6 @@ Hooks.on("renderLongRestDialog", async (args, html) => {
 	html.css({height: 'auto'}).find('div[class="dialog-buttons"]').before(foodWaterOptions);
 });
 
-
 Hooks.on("closeShortRestDialog", async (args, html) => {
 	if (event.target.dataset.button !== "rest") return;
 	if (!isTrackingEnabled(args)) return;
@@ -159,7 +175,6 @@ Hooks.on("closeShortRestDialog", async (args, html) => {
 	await trackFoodAndWater(args, html);
 });
 
-
 Hooks.on("closeLongRestDialog", async (args, html) => {
 	if (event.target.dataset.button !== "rest") return;
 	if (!isTrackingEnabled(args)) return;
@@ -167,6 +182,27 @@ Hooks.on("closeLongRestDialog", async (args, html) => {
 	
 	await trackFoodAndWater(args, html);
 });
+
+
+
+// for compatibility with FVTT-Long-Rest-HD-Healing-5e
+Hooks.on("renderHDLongRestDialog", async (args, html) => {
+	if (!isTrackingEnabled(args)) return;
+	if (game.settings.get(MODULE,"relevantRestTypes") === 0) return;
+
+	const data = await getFWData(args.actor);
+	let foodWaterOptions = await renderTemplate('modules/food-and-water-tracker/templates/track-food-water.html', data);
+	html.css({height: 'auto'}).find('div[class="dialog-buttons"]').before(foodWaterOptions);
+});
+
+Hooks.on("closeHDLongRestDialog", async (args, html) => {
+	if (event.target.dataset.button !== "rest") return;
+	if (!isTrackingEnabled(args)) return;
+	if (game.settings.get(MODULE,"relevantRestTypes") === 0) return;
+	
+	await trackFoodAndWater(args, html);
+});
+
 
 
 // process the food and water tracking input
@@ -218,7 +254,49 @@ async function trackFoodAndWater(args, html) {
 		}
 	}
 
-	let waterQuantity = html.find('.waterQuantity')[0].value;
+	const listWaterContainers = game.settings.get(MODULE, "listWaterContainers");
+	let waterQuantity = "";
+	if (listWaterContainers) {
+		let waterId = html.find('.waterQuantity')[0].value;
+		if (waterId === "lessThanRequiredWater") {
+			waterQuantity = "lessThanRequiredWater";
+		} else {
+			if (args.actor.items.get(waterId)) {
+				let waterContainers = [];
+				let waterContainerCapacities = game.settings.get(MODULE, "waterContainerCapacities").split(";").filter((container) => {
+					return container !== "";
+				});
+				for (let containerCap of waterContainerCapacities) {
+					let containerSpec = containerCap.split(":").filter((c) => {
+						return c !== "";
+					})
+					waterContainers.push({name: containerSpec[0], chargesPerGallon: containerSpec[1]});
+				}
+				let waterItem = args.actor.items.get(waterId);
+				let waterItems = args.actor.items.filter(i => i.name === waterItem.name);
+				let totalCharges = 0;
+				for (let item of waterItems) {
+					totalCharges += item.data.data.uses.value + (item.data.data.quantity - 1) * item.data.data.uses.max;
+				}
+				let chargesPerGallon = waterContainers.filter(c => c.name === waterItem.name)[0]?.chargesPerGallon;
+				if (totalCharges - (game.settings.get(MODULE,"hotWeather") ? 2 : 1) * chargesPerGallon >= 0) {
+					waterQuantity = "moreThanRequiredWater";
+					let chargesToRemove = (game.settings.get(MODULE,"hotWeather") ? 2 : 1) * chargesPerGallon;
+					await removeWaterContainerCharges(chargesToRemove, waterItems);
+				} else if (totalCharges - (game.settings.get(MODULE,"hotWeather") ? 1 : 0.5) * chargesPerGallon >= 0) {
+					waterQuantity = "requiredWater";
+					let chargesToRemove = (game.settings.get(MODULE,"hotWeather") ? 1 : 0.5) * chargesPerGallon;
+					await removeWaterContainerCharges(chargesToRemove, waterItems);
+				} else {
+					waterQuantity = "lessThanRequiredWater";
+					await removeWaterContainerCharges(totalCharges, waterItems);
+				}
+			}
+		}
+	} else {
+		waterQuantity = html.find('.waterQuantity')[0].value;	
+	}
+	
 	if (waterQuantity === "moreThanRequiredWater") {
 		await args.actor.setFlag("dnd5e", "DaysWithoutWater", 0);
 	} else if (waterQuantity === "requiredWater") {
@@ -252,6 +330,39 @@ async function trackFoodAndWater(args, html) {
 }
 
 
+// remove charges from water container items like waterskins
+async function removeWaterContainerCharges(chargesToRemove, waterItems) {
+	for (let item of waterItems) {
+		if (item.data.data.uses.value < chargesToRemove) {
+			chargesToRemove -= item.data.data.uses.value;
+			if (item.data.data.quantity > 1) {
+				let newQuantity = item.data.data.quantity - 1;
+				let remainingCharges = item.data.data.uses.max;
+				for (let i = 0; i < item.data.data.quantity; i++) {
+					chargesToRemove -= item.data.data.uses.max;
+					newQuantity--;
+					if (chargesToRemove <= 0 || newQuantity < 1) {
+						remainingCharges = Math.abs(chargesToRemove);
+						newQuantity++;
+						break;
+					}
+				}
+				await item.data.document.update({'data.uses.value': remainingCharges, 'data.quantity': newQuantity});
+			} else {
+				await item.data.document.update({'data.uses.value': 0});	
+			}
+		} else {
+			await item.data.document.update({'data.uses.value': item.data.data.uses.value - chargesToRemove});
+			chargesToRemove -= item.data.data.uses.value;
+		}
+		
+		if (chargesToRemove <= 0) {
+			break;
+		}
+	}
+}
+
+
 // collect food and water tracking data from an actor
 async function getFWData(consumerActor) {
 	const defaultFlagValues = {
@@ -275,7 +386,9 @@ async function getFWData(consumerActor) {
 	const maxWaterDays = ((consumerActor.data.flags.dnd5e.customWaterLimit == 0) ? 1 : consumerActor.data.flags.dnd5e.customWaterLimit);
 	const noWaterDays = consumerActor.getFlag("dnd5e","DaysWithoutWater");
 	const reqWater = (game.settings.get(MODULE,"hotWeather") ? 2 : 1);
+	const halfReqWater = reqWater / 2;
 	const pluralGallons = reqWater > 1;
+	const halfPluralGallons = halfReqWater > 1;
 
 	const showMaxWaterDays = game.settings.get(MODULE,"showMaxWaterDays");
 
@@ -295,21 +408,51 @@ async function getFWData(consumerActor) {
 		}
 	}
 
+	const listWaterContainers = game.settings.get(MODULE, "listWaterContainers");
+	let waterList = [];
+	if (listWaterContainers) {
+		let waterContainerCapacities = game.settings.get(MODULE, "waterContainerCapacities").split(";").filter((container) => {
+			return container !== "";
+		});
+		for (let containerCap of waterContainerCapacities) {
+			let containerSpec = containerCap.split(":").filter((c) => {
+				return c !== "";
+			})
+			let items = consumerActor.items.filter(i => (i.name === containerSpec[0] && i.data.data?.uses?.per === "charges"));
+			if (items?.length > 0) {
+				let totalCharges = 0;
+				let totalQuantity = 0;
+				for (let item of items) {
+					totalCharges += item.data.data.uses.value + (item.data.data.quantity - 1) * item.data.data.uses.max;
+					totalQuantity += item.data.data.quantity;
+				}
+				if (totalCharges > 0) {
+					waterList.push({name: `${items[0].name} (${totalQuantity}) (${totalCharges / containerSpec[1]} ${game.i18n.localize("FWT.gallonWater")}${(totalCharges / containerSpec[1] !== 1) ? game.i18n.localize("FWT.gallonsWater") : ""})`, id: items[0].id});	
+				}
+			}
+		}
+	}
+
 	const data = {
 		noFoodDays,
 		maxFoodDays,
 		reqWater,
+		halfReqWater,
 		noWaterDays,
 		maxWaterDays,
 		showMaxWaterDays,
 		pluralGallons,
+		halfPluralGallons,
 		showSRDrules,
 		showCustomRules,
 		customFoodRuleText,
 		customWaterRuleText,
 		showDefaultFoodOptions: !listFoodItemOptions,
 		listFoodItemOptions,
-		foodList
+		foodList,
+		showDefaultWaterOptions: !listWaterContainers,
+		listWaterContainers,
+		waterList
 	};
 	return data;
 }
