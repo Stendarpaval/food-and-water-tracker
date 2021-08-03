@@ -12,6 +12,7 @@
 		{{#each foodList}}
 			<option value={{this.id}}>{{this.name}}</option>
 		{{/each}}
+		<option value="onePoundOrMore">{{localize 'FWT.onePoundOrMoreFood'}}</option>
 		<option value="none">{{localize 'FWT.noneFood'}}</option>
 	</select>
 	{{/if}}
@@ -30,6 +31,7 @@
 		{{#each waterList}}
 			<option value={{this.id}}>{{this.name}}</option>
 		{{/each}}
+		<option value="moreThanRequiredWater">{{localize 'FWT.moreThanWater'}} {{reqWater}} {{localize 'FWT.gallonWater'}}{{#if pluralGallons}}{{localize 'FWT.gallonsWater'}}{{/if}}</option>
 		<option value="lessThanRequiredWater">{{localize 'FWT.lessThanWater'}} {{halfReqWater}} {{localize 'FWT.gallonWater'}}{{#if halfPluralGallons}}{{localize 'FWT.gallonsWater'}}{{/if}}</option>
 	</select>
 	{{/if}}

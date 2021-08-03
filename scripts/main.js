@@ -215,6 +215,8 @@ async function trackFoodAndWater(args, html) {
 		let foodId = html.find('.foodQuantity')[0].value;
 		if (foodId === "none") {
 			foodQuantity = "none";
+		} else if (foodId ==="onePoundOrMore") {
+			foodQuantity = "onePoundOrMore";
 		} else {
 			if (args.actor.items.get(foodId)) {
 				let foodItem = args.actor.items.get(foodId);
@@ -260,6 +262,8 @@ async function trackFoodAndWater(args, html) {
 		let waterId = html.find('.waterQuantity')[0].value;
 		if (waterId === "lessThanRequiredWater") {
 			waterQuantity = "lessThanRequiredWater";
+		} else if (waterId === "moreThanRequiredWater") {
+			waterQuantity = "moreThanRequiredWater";
 		} else {
 			if (args.actor.items.get(waterId)) {
 				let waterContainers = [];
